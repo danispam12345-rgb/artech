@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ArTech - Automação</title>
+
+    <!-- Bibliotecas Necessárias -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- VERSÃO FIXADA DO LUCIDE-REACT PARA EVITAR QUEBRA DE ÍCONES (0.292.0) -->
+    <script src="https://unpkg.com/lucide-react@0.292.0/dist/umd/lucide-react.min.js"></script>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // 1. EXTRAINDO VARIÁVEIS GLOBAIS
+        const { useState, useEffect } = React;
+        
+        // EXTRAINDO DO OBJETO 'window.lucide' (Nome correto da versão React)
+        const { 
+          ShoppingCart, Menu, X, Bot, Instagram, Map, Wrench, Send,
+          Home, Building, CheckCircle2, Power, Camera, Wifi, Lock, User, LogOut, Trash2, ArrowRight,
+          Lightbulb, ShieldAlert, Thermometer, Radio, Eye, Facebook, Twitter, Mail, FileText, Download, Play 
+        } = window.lucide;
+
+        // 2. SEUS DADOS
+        const MOCK_KITS = [
+          { id: 101, name: 'Kit EcoHome', category: 'Residencial', price: 499, description: 'Hub central + Sensores básicos. Perfeito para iniciar a automação da sua casa.', icon: Home, image: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=800&q=80' },
+          { id: 102, name: 'Condo Master', category: 'Corporativo', price: 1250, description: 'Solução robusta para controle de acesso e climatização em escritórios modernos.', icon: Building, image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80' },
+          { id: 103, name: 'Kit Quarto Gamer', category: 'Residencial', price: 780, description: 'Iluminação imersiva RGB e controle de periféricos via comandos de voz.', icon: Home, image: 'https://images.unsplash.com/photo-1616588589676-62b3bd4ff6d2?auto=format&fit=crop&w=800&q=80' },
+          { id: 104, name: 'Kit Segurança Total', category: 'Segurança', price: 1500, description: 'Câmeras externas, fechadura biométrica e sensores de intrusão integrados.', icon: ShieldAlert, image: 'https://images.unsplash.com/photo-1557324232-b8917d3c3dcb?auto=format&fit=crop&w=800&q=80' },
+          { id: 105, name: 'Sala de Reunião Pro', category: 'Corporativo', price: 2100, description: 'Automação de projetor, persianas e ar condicionado com um único toque ou comando.', icon: Building, image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&q=80' },
+          { id: 106, name: 'Jardim Smart', category: 'Residencial', price: 850, description: 'Controle de irrigação e iluminação externa baseada na previsão do tempo e luminosidade.', icon: Home, image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80' },
+        ];
+
+        const MOCK_PARTS = [
+          { id: 201, name: 'Hub Zigbee Max', category: 'Conectividade', price: 450, description: 'Central de automação local, suporta até 128 dispositivos simultâneos sem sobrecarregar o Wi-Fi.', icon: Wifi, image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=800&q=80' },
+          { id: 202, name: 'Mini Hub Wi-Fi/IR', category: 'Conectividade', price: 120, description: 'Controle universal infravermelho para TV, Ar Condicionado e Som.', icon: Radio, image: 'https://images.unsplash.com/photo-1584433144859-1fc3ab64a957?auto=format&fit=crop&w=800&q=80' },
+          { id: 203, name: 'Smart Switch Pro', category: 'Componentes', price: 189, description: 'Interruptor Wi-Fi touch em vidro temperado. Necessita de fio neutro.', icon: Power, image: 'https://images.unsplash.com/photo-1558089687-f282ffcbc126?auto=format&fit=crop&w=800&q=80' },
+          { id: 204, name: 'Lâmpada Smart RGB', category: 'Componentes', price: 89, description: 'Lâmpada LED inteligente, 16 milhões de cores, compatível com Alexa e Google.', icon: Lightbulb, image: 'https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&w=800&q=80' },
+          { id: 205, name: 'Motor para Persiana', category: 'Atuadores', price: 450, description: 'Automatiza persianas de rolo existentes. Bateria recarregável integrada.', icon: Wrench, image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80' },
+          { id: 206, name: 'Sensor de Presença', category: 'Sensores', price: 95, description: 'Detecta movimento para acionar cenas de iluminação ou alarmes.', icon: Eye, image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=800&q=80' },
+          { id: 207, name: 'Security Cam 360', category: 'Segurança', price: 320, description: 'Câmera IP interna com visão noturna, áudio bidirecional e rastreamento.', icon: Camera, image: 'https://images.unsplash.com/photo-1557324232-b8917d3c3dcb?auto=format&fit=crop&w=800&q=80' },
+          { id: 208, name: 'Smart Lock Touch', category: 'Segurança', price: 890, description: 'Fechadura digital premium com biometria, senha temporária e tag NFC.', icon: Lock, image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=800&q=80' },
+          { id: 209, name: 'Tomada Smart 16A', category: 'Componentes', price: 75, description: 'Tomada inteligente com monitoramento de consumo de energia em tempo real.', icon: Power, image: 'https://images.unsplash.com/photo-1558442074-3c19857bc1dc?auto=format&fit=crop&w=800&q=80' },
+          { id: 210, name: 'Termostato Inteligente', category: 'Atuadores', price: 340, description: 'Controle preciso da temperatura do ar condicionado central e piso aquecido.', icon: Thermometer, image: 'https://images.unsplash.com/photo-1585435421671-0c16764628ce?auto=format&fit=crop&w=800&q=80' },
+          { id: 211, name: 'Fita LED RGBIC 5m', category: 'Componentes', price: 150, description: 'Fita LED com sincronização musical e controle de múltiplas cores na mesma fita.', icon: Lightbulb, image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80' },
+          { id: 212, name: 'Sensor de Fumaça Smart', category: 'Segurança', price: 180, description: 'Notificações em tempo real no celular e disparo de sirene integrada ao detectar fumaça.', icon: ShieldAlert, image: 'https://images.unsplash.com/photo-1585830812416-a6c86bb14576?auto=format&fit=crop&w=800&q=80' }
+        ];
+
+        // 3. COMPONENTES E VIEWS
+        const ArTechLogo = () => (
+          <div className="flex flex-col items-center justify-center cursor-pointer">
+            <div className="relative flex items-center justify-center w-12 h-12 mb-1">
+              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-lg">
+                <defs>
+                  <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#06b6d4" /><stop offset="100%" stopColor="#2563eb" /></linearGradient>
+                  <linearGradient id="logoGradDark" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#0891b2" /><stop offset="100%" stopColor="#1d4ed8" /></linearGradient>
+                </defs>
+                <path d="M 30 20 L 30 70 M 20 30 L 30 30 M 20 45 L 30 45 M 20 60 L 30 60" stroke="#1e3a8a" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="20" cy="30" r="4" fill="#06b6d4" /><circle cx="20" cy="45" r="4" fill="#06b6d4" /><circle cx="20" cy="60" r="4" fill="#06b6d4" />
+                <path d="M 50 15 L 75 65 L 60 75 L 45 45 Z" fill="url(#logoGradDark)" />
+                <path d="M 45 25 L 20 75 L 35 85 L 55 45 Z" fill="url(#logoGrad)" />
+                <path d="M 35 60 L 65 30 L 65 45 M 65 30 L 50 30" stroke="#00FFFF" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                <path d="M 25 75 L 85 45 L 85 55 M 85 45 L 75 45" stroke="#3b82f6" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              </svg>
+            </div>
+            <div className="flex flex-col items-center leading-none">
+              <span className="font-black text-2xl tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-700">ArTech</span>
+              <span className="text-[9px] font-medium text-cyan-500 tracking-wider mt-0.5">Soluções em Automação</span>
+            </div>
+          </div>
+        );
+
+        const KitsView = ({ onAddToCart, onProductClick }) => (
+          <div className="min-h-screen bg-zinc-950 pt-32 pb-24 px-6 md:px-12">
+            <div className="max-w-7xl mx-auto">
+              <div className="mb-12 anim-fade-in-up">
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Nossos <span className="text-blue-500">Produtos</span></h1>
+                <p className="text-zinc-400 text-lg">Kits estruturados com planta eletrônica e tutoriais guiados. Perfeitos para iniciar a sua automação.</p>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 anim-fade-in-up-delay-1">
+                {MOCK_KITS.map(kit => (
+                  <div key={kit.id} className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-3 flex flex-col shadow-lg group hover:border-blue-500/50 transition-colors h-full">
+                    <div onClick={() => onProductClick(kit, true)} className="cursor-pointer relative w-full h-64 rounded-[1.5rem] overflow-hidden bg-zinc-950 flex-shrink-0">
+                      <img src={kit.image} alt={kit.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-transform duration-700 group-hover:scale-105" />
+                      <div className="absolute top-4 left-4 bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 shadow-lg border border-blue-500/50">
+                        <Map className="w-3 h-3" /> Planta Inclusa
+                      </div>
+                    </div>
+                    <div className="p-5 flex flex-col flex-grow">
+                      <span className="text-blue-500 font-bold tracking-wider text-[10px] uppercase mb-1">{kit.category}</span>
+                      <h4 onClick={() => onProductClick(kit, true)} className="text-white font-bold text-2xl mb-3 cursor-pointer hover:text-blue-400 transition-colors">{kit.name}</h4>
+                      <p className="text-zinc-400 text-sm mb-6 flex-grow leading-relaxed">{kit.description}</p>
+                      <div className="flex items-end justify-between border-t border-zinc-800 pt-5 mt-auto">
+                        <div>
+                          <span className="text-zinc-500 text-xs block mb-1">A partir de</span>
+                          <span className="text-white font-black text-2xl">R$ {kit.price.toLocaleString('pt-BR')}</span>
+                        </div>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onAddToCart(kit); }} 
+                          className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-xl font-bold transition-colors flex items-center gap-2 cursor-pointer relative z-10"
+                        >
+                          <ShoppingCart className="w-4 h-4" /> Comprar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+        const PartsView = ({ onAddToCart, onProductClick }) => {
+          const [filter, setFilter] = useState('Todas');
+          const categories = ['Todas', 'Conectividade', 'Componentes', 'Sensores', 'Atuadores', 'Segurança'];
+          const filteredParts = filter === 'Todas' ? MOCK_PARTS : MOCK_PARTS.filter(p => p.category === filter);
+
+          return (
+            <div className="min-h-screen bg-zinc-950 pt-32 pb-24 px-6 md:px-12">
+              <div className="max-w-7xl mx-auto">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+                  <div className="anim-fade-in-up">
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Peças <span className="text-cyan-500">Avulsas</span></h1>
+                    <p className="text-zinc-400 text-lg">Componentes individuais para montagem e expansão do seu projeto.</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 anim-fade-in-up-delay-1">
+                    {categories.map(cat => (
+                      <button 
+                        key={cat} onClick={() => setFilter(cat)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${filter === cat ? 'bg-cyan-600 text-white' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border border-zinc-800'}`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 anim-fade-in-up-delay-2">
+                  {filteredParts.map(part => (
+                    <div key={part.id} className="bg-zinc-900 border border-zinc-800 rounded-[1.5rem] p-2 flex flex-col h-full hover:border-cyan-500/50 transition-colors group">
+                      <div onClick={() => onProductClick(part, false)} className="cursor-pointer relative h-48 rounded-[1rem] overflow-hidden bg-zinc-950 flex items-center justify-center">
+                        <img src={part.image} alt={part.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-transform duration-700 group-hover:scale-105" />
+                      </div>
+                      <div className="p-4 flex flex-col flex-grow">
+                        <span className="text-cyan-500 font-bold tracking-wider text-[10px] uppercase mb-1">{part.category}</span>
+                        <h4 onClick={() => onProductClick(part, false)} className="text-white font-bold text-lg leading-tight mb-2 cursor-pointer hover:text-cyan-400 transition-colors">{part.name}</h4>
+                        <div className="mt-auto flex items-end justify-between border-t border-zinc-800 pt-3">
+                          <span className="text-white font-black text-xl">R$ {part.price.toLocaleString('pt-BR')}</span>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); onAddToCart(part); }} 
+                            className="w-10 h-10 bg-zinc-800 hover:bg-cyan-600 text-cyan-400 hover:text-white rounded-xl flex items-center justify-center transition-colors cursor-pointer relative z-10"
+                          >
+                            <ShoppingCart className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const AboutView = ({ onNavigate }) => (
+          <div className="min-h-screen bg-zinc-950 pt-32 pb-24 px-6 md:px-12">
+            <div className="max-w-4xl mx-auto text-center mb-16 anim-fade-in-up">
+              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">Democratizando a <span className="text-blue-500">Engenharia</span></h1>
+              <p className="text-xl text-zinc-400 leading-relaxed">
+                A ArTech nasceu para eliminar o intermediário caro. Nós vendemos a planta eletrônica perfeita e o hardware de alta qualidade. Você mesmo pode instalar ou contratar um eletricista local. Simples, seguro e acessível.
+              </p>
+            </div>
+            <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 anim-fade-in-up-delay-1">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-8 text-center flex flex-col items-center hover:border-blue-500/30 transition-colors">
+                <div className="w-16 h-16 bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center mb-6"><Bot className="w-8 h-8"/></div>
+                <h3 className="text-xl font-bold text-white mb-4">IA Arty</h3>
+                <p className="text-zinc-400">Nossa inteligência analisa sua casa e monta o carrinho exato de peças necessárias. Sem sobras, sem faltas.</p>
+              </div>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-8 text-center flex flex-col items-center hover:border-cyan-500/30 transition-colors">
+                <div className="w-16 h-16 bg-cyan-900/30 text-cyan-500 rounded-full flex items-center justify-center mb-6"><Map className="w-8 h-8"/></div>
+                <h3 className="text-xl font-bold text-white mb-4">Plantas Visuais</h3>
+                <p className="text-zinc-400">Receba esquemas elétricos coloridos e didáticos. Se você sabe ligar um interruptor, saberá instalar nossos kits.</p>
+              </div>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-8 text-center flex flex-col items-center hover:border-blue-500/30 transition-colors">
+                <div className="w-16 h-16 bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center mb-6"><ShieldAlert className="w-8 h-8"/></div>
+                <h3 className="text-xl font-bold text-white mb-4">Suporte Local</h3>
+                <p className="text-zinc-400">Você não fica na mão. Mantemos tutoriais em vídeo e suporte direto para garantir que a sua rede suba online perfeitamente.</p>
+              </div>
+            </div>
+            <div className="max-w-3xl mx-auto text-center mt-20 anim-fade-in-up-delay-2">
+              <button onClick={() => onNavigate('kits')} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-colors inline-flex items-center gap-2 cursor-pointer">
+                Ver Produtos Disponíveis <ArrowRight className="w-5 h-5"/>
+              </button>
+            </div>
+          </div>
+        );
+
+        const ContentView = ({ title, content }) => (
+          <div className="min-h-screen bg-zinc-950 pt-32 pb-24 px-6 md:px-12">
+            <div className="max-w-4xl mx-auto bg-zinc-900 border border-zinc-800 p-8 md:p-12 rounded-[2rem] anim-fade-in-up">
+              <div className="flex items-center gap-4 mb-8 border-b border-zinc-800 pb-6">
+                <FileText className="w-8 h-8 text-blue-500" />
+                <h1 className="text-3xl md:text-4xl font-bold text-white">{title}</h1>
+              </div>
+              <div className="prose prose-invert max-w-none">
+                <p className="text-zinc-400 leading-relaxed whitespace-pre-wrap">{content}</p>
+              </div>
+            </div>
+          </div>
+        );
+
+        const LoginView = ({ onLoginSuccess, onToast }) => {
+          const [email, setEmail] = useState('');
+          const [password, setPassword] = useState('');
+          const [isLoading, setIsLoading] = useState(false);
+
+          const handleLogin = (e) => {
+            e.preventDefault();
+            if (!email || !password) return onToast("Preencha todos os campos.");
+            setIsLoading(true);
+            setTimeout(() => {
+              setIsLoading(false);
+              onLoginSuccess({ name: email.split('@')[0], email });
+            }, 1200);
+          };
+
+          return (
+            <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4 pt-20 relative overflow-hidden">
+              <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-900/10 rounded-full blur-[100px] pointer-events-none"></div>
+              <div className="bg-[#2D2466] w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl relative z-10 border border-indigo-500/20 anim-scale-in">
+                <div className="text-center mb-8"><h2 className="text-2xl font-bold text-white mb-2">Área do Cliente</h2></div>
+                <form onSubmit={handleLogin} className="flex flex-col gap-5">
+                  <input type="text" placeholder="E-mail ou CPF" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-[#40387A] text-white px-5 py-4 rounded-2xl w-full outline-none focus:ring-2 focus:ring-blue-400" />
+                  <input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-[#40387A] text-white px-5 py-4 rounded-2xl w-full outline-none focus:ring-2 focus:ring-blue-400" />
+                  <div className="flex items-center justify-between mt-1 px-1">
+                    <label className="flex items-center gap-3 cursor-pointer group"><input type="checkbox" className="w-4 h-4 rounded text-blue-500" /><span className="text-indigo-200 text-sm">Lembrar-me</span></label>
+                    <button type="button" onClick={() => onToast("Instruções enviadas para seu e-mail/celular.")} className="text-blue-400 text-sm hover:underline cursor-pointer">Esqueceu a senha?</button>
+                  </div>
+                  <button type="submit" disabled={isLoading} className="mt-4 bg-[#5161CE] hover:bg-[#6070E0] text-white font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center cursor-pointer">
+                    {isLoading ? <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : 'Entrar na Plataforma'}
+                  </button>
+                </form>
+                <div className="mt-6 text-center">
+                   <button onClick={() => onToast("Redirecionando para criação de conta...")} className="text-indigo-300 text-sm hover:text-white transition-colors cursor-pointer">Ainda não tem conta? Crie aqui.</button>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // 4. APLICAÇÃO PRINCIPAL
+        function App() {
+          const [currentView, setCurrentView] = useState('home'); 
+          const [contentPage, setContentPage] = useState({ title: '', content: '' });
+          const [user, setUser] = useState(null); 
+          const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+          const [scrolled, setScrolled] = useState(false);
+          const [cart, setCart] = useState([]);
+          const [isCartOpen, setIsCartOpen] = useState(false);
+          const [selectedProduct, setSelectedProduct] = useState(null);
+          const [isKitModal, setIsKitModal] = useState(false);
+          const [modalTab, setModalTab] = useState('details'); 
+          const [toastMessage, setToastMessage] = useState(null);
+          const [isChatOpen, setIsChatOpen] = useState(false);
+          const [inputText, setInputText] = useState("");
+          const [chatMessages, setMessages] = useState([
+            { id: 1, sender: 'bot', text: 'Olá! Sou o Arty. Deseja ver os **Nossos Produtos** ou montar um **Projeto Personalizado** com peças avulsas?', options: ['Ver Produtos', '🛠️ Projeto Personalizado'] }
+          ]);
+
+          useEffect(() => {
+            const handleScroll = () => setScrolled(window.scrollY > 50);
+            window.addEventListener('scroll', handleScroll);
+            return () => window.removeEventListener('scroll', handleScroll);
+          }, []);
+
+          useEffect(() => {
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+          }, [currentView]);
+
+          const handleNavClick = (view) => {
+            setCurrentView(view);
+            setIsMobileMenuOpen(false);
+          };
+
+          const handleContentClick = (title, content) => {
+            setContentPage({ title, content });
+            setCurrentView('content');
+            setIsMobileMenuOpen(false);
+          };
+
+          const showToast = (message) => {
+            setToastMessage(message);
+            setTimeout(() => setToastMessage(null), 3500);
+          };
+
+          const openProductModal = (product, isKit) => {
+            setSelectedProduct(product);
+            setIsKitModal(isKit);
+            setModalTab('details'); 
+          };
+
+          const addToCart = (product) => {
+            setCart(prev => [...prev, product]);
+            showToast(`"${product.name}" adicionado ao carrinho!`);
+            setSelectedProduct(null); 
+            setIsCartOpen(true);
+          };
+
+          const removeFromCart = (indexToRemove) => setCart(prev => prev.filter((_, idx) => idx !== indexToRemove));
+          const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
+
+          const handleSendMessage = (text) => {
+            if (!text.trim()) return;
+            setMessages(prev => [...prev, { id: Date.now(), sender: 'user', text }]);
+            setInputText("");
+
+            setTimeout(() => {
+              let botReply = { id: Date.now() + 1, sender: 'bot', text: '' };
+              const lowerText = text.toLowerCase();
+
+              if (lowerText.match(/(oi|olá|ola|bom dia|boa tarde|boa noite)/)) {
+                botReply.text = 'Olá! Tudo bem? Como posso ajudar a automatizar a sua casa hoje?';
+                botReply.options = ['Quero um Kit Completo', 'Peças Avulsas'];
+              } else if (lowerText.includes('fechadura') || lowerText.includes('porta') || lowerText.includes('segurança')) {
+                botReply.text = 'Para segurança, a nossa Fechadura Digital (Smart Lock Touch) com biometria é a favorita! Deseja ver os kits de segurança ou adicionar a fechadura?';
+                botReply.options = ['Adicionar Fechadura', 'Ver Kits de Segurança'];
+              } else if (lowerText.includes('adicionar fechadura')) {
+                botReply.text = 'Fechadura Smart Lock Touch adicionada ao carrinho com sucesso!';
+                addToCart(MOCK_PARTS.find(p => p.id === 208));
+              } else if (lowerText.includes('luz') || lowerText.includes('iluminação') || lowerText.includes('lampada') || lowerText.includes('lâmpada')) {
+                botReply.text = 'Para iluminação inteligente, recomendo nossos Interruptores Wi-Fi ou Lâmpadas RGB. O que você prefere?';
+                botReply.options = ['Interruptor Smart', 'Lâmpada RGB', 'Fita LED'];
+              } else if (lowerText.includes('interruptor smart')) {
+                botReply.text = 'Interruptor adicionado! Lembre-se que ele precisa de fio neutro para a instalação, ok?';
+                addToCart(MOCK_PARTS.find(p => p.id === 203));
+              } else if (lowerText.includes('lâmpada rgb')) {
+                botReply.text = 'Lâmpada RGB adicionada! São 16 milhões de cores para você personalizar o ambiente.';
+                addToCart(MOCK_PARTS.find(p => p.id === 204));
+              } else if (lowerText.includes('fita led')) {
+                botReply.text = 'Fita LED RGBIC adicionada! Perfeita para sancas e setup gamer.';
+                addToCart(MOCK_PARTS.find(p => p.id === 211));
+              } else if (lowerText.includes('personalizado') || lowerText.includes('projeto')) {
+                botReply.text = 'Para projetos personalizados, recomendo nossa seção de Peças Avulsas. Posso te levar até lá ou você pode me dizer qual ambiente quer automatizar.';
+                botReply.options = ['Ir para Peças Avulsas', 'Automatizar Sala', 'Automatizar Quarto'];
+              } else if (lowerText.includes('peças avulsas') || lowerText.includes('pecas')) {
+                botReply.text = 'Levando você ao catálogo de peças avulsas...';
+                setTimeout(() => { setIsChatOpen(false); handleNavClick('parts'); }, 1000);
+              } else if (lowerText.includes('produtos') || lowerText.includes('kit') || lowerText.includes('pronto') || lowerText.includes('kits de segurança')) {
+                 botReply.text = 'Perfeito! Vou te levar para a galeria de Nossos Produtos e Kits.';
+                 setTimeout(() => { setIsChatOpen(false); handleNavClick('kits'); }, 1000);
+              } else if (lowerText.includes('sala')) {
+                botReply.text = `Entendido! Para a **Sala**, adicionei as peças avulsas ideais no seu carrinho: 1 Hub Zigbee Max + 1 Interruptor Smart Wi-Fi.`;
+                addToCart(MOCK_PARTS.find(p=>p.id===201));
+                addToCart(MOCK_PARTS.find(p=>p.id===203));
+              } else if (lowerText.includes('quarto')) {
+                botReply.text = `Para o **Quarto**, adicionei um Mini Hub IR (para controlar a TV e o Ar) e uma Lâmpada RGB no seu carrinho!`;
+                addToCart(MOCK_PARTS.find(p=>p.id===202));
+                addToCart(MOCK_PARTS.find(p=>p.id===204));
+              } else {
+                botReply.text = 'Não entendi muito bem. Estou aqui para ajudar a montar seu carrinho, recomendar peças ou tirar dúvidas. O que deseja explorar?';
+                botReply.options = ['Ver Produtos', 'Ver Peças Avulsas', 'Falar sobre Iluminação'];
+              }
+              setMessages(prev => [...prev, botReply]);
+            }, 1000);
+          };
+
+          return (
+            <div className="min-h-screen bg-zinc-950 text-white font-sans selection:bg-blue-500/30 relative flex flex-col">
+              <style>{`
+                @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes slideInRight { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+                @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+                .anim-fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+                .anim-fade-in-up-delay-1 { animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s forwards; opacity: 0; }
+                .anim-fade-in-up-delay-2 { animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s forwards; opacity: 0; }
+                .anim-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+                .anim-slide-in-right { animation: slideInRight 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+                .anim-scale-in { animation: scaleIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+              `}</style>
+              
+              {toastMessage && (
+                <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[100] bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl font-bold tracking-wide flex items-center gap-2 animate-[bounce_0.5s_ease-out] pointer-events-none">
+                  <CheckCircle2 className="w-5 h-5" /> {toastMessage}
+                </div>
+              )}
+
+              {selectedProduct && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                  <div className="absolute inset-0 bg-black/80 backdrop-blur-sm anim-fade-in cursor-pointer" onClick={() => setSelectedProduct(null)}></div>
+                  <div className="bg-zinc-900 border border-zinc-700 rounded-3xl w-full max-w-5xl flex flex-col md:flex-row overflow-hidden relative z-20 anim-scale-in min-h-[500px]">
+                    <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 p-2 rounded-full transition-colors z-50 bg-black/40 hover:bg-black/60 text-white cursor-pointer"><X className="w-5 h-5"/></button>
+                    
+                    <div className="md:w-[45%] bg-zinc-950 flex items-center justify-center relative overflow-hidden hidden md:flex">
+                       <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-cover opacity-80" />
+                    </div>
+                    
+                    <div className="md:w-[55%] p-8 flex flex-col text-white">
+                      <div className="flex gap-6 mb-6 border-b border-zinc-800 pb-2">
+                        <button onClick={() => setModalTab('details')} className={`text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer ${modalTab === 'details' ? 'text-blue-500 border-b-2 border-blue-500 pb-2 -mb-[9px]' : 'text-zinc-500 hover:text-zinc-300'}`}>Detalhes</button>
+                        <button onClick={() => setModalTab('schematic')} className={`text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer ${modalTab === 'schematic' ? 'text-blue-500 border-b-2 border-blue-500 pb-2 -mb-[9px]' : 'text-zinc-500 hover:text-zinc-300'}`}>Planta</button>
+                        <button onClick={() => setModalTab('tutorial')} className={`text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer ${modalTab === 'tutorial' ? 'text-blue-500 border-b-2 border-blue-500 pb-2 -mb-[9px]' : 'text-zinc-500 hover:text-zinc-300'}`}>Tutorial</button>
+                      </div>
+
+                      {modalTab === 'details' && (
+                        <div className="flex flex-col flex-grow anim-fade-in">
+                          <span className={`font-black tracking-wider text-[10px] uppercase mb-2 ${isKitModal ? 'text-blue-500' : 'text-cyan-500'}`}>{selectedProduct.category}</span>
+                          <h3 className="font-bold text-3xl mb-4">{selectedProduct.name}</h3>
+                          <p className="mb-6 flex-grow text-zinc-400 leading-relaxed">{selectedProduct.description}</p>
+                          
+                          <div className="rounded-2xl p-4 mb-6 bg-zinc-950 border border-zinc-800">
+                            <span className="text-sm block mb-1 text-zinc-500">Preço unitário</span>
+                            <span className="font-black text-3xl">R$ {selectedProduct.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                          </div>
+                          
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); addToCart(selectedProduct); }} 
+                            className={`w-full text-white py-4 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-lg cursor-pointer ${isKitModal ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/30' : 'bg-cyan-600 hover:bg-cyan-500 shadow-cyan-900/30'}`}
+                          >
+                            <ShoppingCart className="w-5 h-5" /> Adicionar ao Carrinho
+                          </button>
+                        </div>
+                      )}
+
+                      {modalTab === 'schematic' && (
+                        <div className="flex flex-col flex-grow anim-fade-in">
+                          <h3 className="font-bold text-2xl mb-2">Esquema de Ligação</h3>
+                          <p className="text-sm text-zinc-400 mb-4 leading-relaxed">Baixe a planta elétrica em alta resolução. O arquivo inclui detalhes de ligação (fase, neutro, retorno).</p>
+                          <div className="flex-grow bg-blue-900/10 border border-blue-500/20 rounded-2xl overflow-hidden relative group mt-2">
+                             <img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80" className="w-full h-full object-cover opacity-40 mix-blend-screen" alt="Esquema elétrico blueprint" />
+                             <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/40 group-hover:bg-zinc-950/60 transition-colors">
+                                <button onClick={() => showToast("Iniciando download...")} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold cursor-pointer transition-all hover:scale-105 shadow-xl flex items-center gap-2">
+                                   <Download className="w-5 h-5" /> Baixar PDF
+                                </button>
+                             </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {modalTab === 'tutorial' && (
+                        <div className="flex flex-col flex-grow anim-fade-in">
+                          <h3 className="font-bold text-2xl mb-2">Vídeo Tutorial</h3>
+                          <p className="text-sm text-zinc-400 mb-4 leading-relaxed">Aprenda na prática como instalar o {selectedProduct.name}.</p>
+                          <div className="flex-grow bg-black rounded-2xl overflow-hidden relative border border-zinc-800 flex items-center justify-center group mt-2 cursor-pointer" onClick={() => showToast("Carregando vídeo...")}>
+                             <img src={selectedProduct.image} className="absolute inset-0 w-full h-full object-cover opacity-50 blur-[2px] group-hover:blur-0 group-hover:opacity-70 transition-all duration-500" alt="Video thumbnail" />
+                             <div className="relative w-16 h-16 bg-red-600/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(220,38,38,0.5)] z-10 backdrop-blur-md">
+                                <Play className="w-6 h-6 text-white ml-1 fill-white" />
+                             </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isCartOpen && (
+                <div className="fixed inset-0 z-[100] flex justify-end">
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm anim-fade-in cursor-pointer" onClick={() => setIsCartOpen(false)}></div>
+                  <div className="relative h-full w-full max-w-md bg-zinc-900 shadow-2xl flex flex-col anim-slide-in-right z-10">
+                    <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-950">
+                      <h2 className="text-xl font-bold flex items-center gap-2"><ShoppingCart className="w-6 h-6 text-blue-500" /> Carrinho</h2>
+                      <button onClick={() => setIsCartOpen(false)} className="text-zinc-400 hover:text-white p-2 bg-zinc-800 rounded-full cursor-pointer"><X className="w-5 h-5" /></button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+                      {cart.length === 0 ? (
+                        <div className="text-center text-zinc-500 mt-12 flex flex-col items-center gap-4">
+                          <ShoppingCart className="w-16 h-16 opacity-20" />
+                          <p>Carrinho vazio.</p>
+                          <button onClick={() => { setIsCartOpen(false); handleNavClick('kits'); }} className="text-blue-500 font-medium hover:underline cursor-pointer">Ver Produtos</button>
+                        </div>
+                      ) : (
+                        cart.map((item, idx) => (
+                            <div key={idx} className="bg-zinc-800 border border-zinc-700/50 p-3 rounded-2xl flex gap-4 items-center">
+                              <img src={item.image} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                              <div className="flex-1">
+                                <h4 className="font-bold text-sm text-white line-clamp-1">{item.name}</h4>
+                                <span className="text-blue-400 font-bold text-sm">R$ {item.price.toLocaleString('pt-BR')}</span>
+                              </div>
+                              <button onClick={() => removeFromCart(idx)} className="p-2 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer" title="Remover"><Trash2 className="w-5 h-5" /></button>
+                            </div>
+                          ))
+                      )}
+                    </div>
+                    {cart.length > 0 && (
+                      <div className="p-6 bg-zinc-950 border-t border-zinc-800">
+                        <div className="flex justify-between items-center mb-6"><span className="text-zinc-400">Total:</span><span className="text-2xl font-black text-white">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></div>
+                        <button onClick={() => showToast("Enviando para Pagamento...")} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 cursor-pointer">Finalizar Compra <ArrowRight className="w-5 h-5" /></button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled || currentView !== 'home' ? 'bg-zinc-950/95 backdrop-blur-md border-b border-zinc-800/80 py-3 shadow-lg' : 'bg-transparent py-5'}`}>
+                <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
+                  <div onClick={() => handleNavClick('home')} className="hover:opacity-80 transition-opacity"><ArTechLogo /></div>
+                  
+                  <nav className="hidden lg:flex items-center gap-8">
+                    <button onClick={() => handleNavClick('home')} className={`text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer ${currentView === 'home' ? 'text-blue-500' : 'text-zinc-300 hover:text-white'}`}>Início</button>
+                    <button onClick={() => handleNavClick('kits')} className={`text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer ${currentView === 'kits' ? 'text-blue-500' : 'text-zinc-300 hover:text-white'}`}>Produtos</button>
+                    <button onClick={() => handleNavClick('parts')} className={`text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer ${currentView === 'parts' ? 'text-cyan-500' : 'text-zinc-300 hover:text-white'}`}>Peças</button>
+                    <button onClick={() => handleNavClick('about')} className={`text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer ${currentView === 'about' ? 'text-blue-500' : 'text-zinc-300 hover:text-white'}`}>Sobre</button>
+                    
+                    <div className="h-6 w-px bg-zinc-800 mx-2"></div>
+                    
+                    <button onClick={() => setIsCartOpen(true)} className="relative p-2 text-zinc-300 hover:text-blue-500 transition-colors group cursor-pointer">
+                      <ShoppingCart className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                      {cart.length > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-lg border border-zinc-950">{cart.length}</span>}
+                    </button>
+                    {user ? (
+                      <div className="flex items-center gap-4 ml-2">
+                        <div onClick={() => showToast("Abrindo perfil...")} className="cursor-pointer flex items-center gap-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 py-1.5 px-3 rounded-full transition-colors">
+                          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-inner"><Bot className="w-5 h-5" /></div>
+                          <span className="text-sm font-medium text-zinc-300">Olá, {user.name}</span>
+                        </div>
+                        <button onClick={() => { setUser(null); showToast("Deslogado."); handleNavClick('home'); }} className="text-zinc-500 hover:text-red-400 transition-colors p-2 cursor-pointer"><LogOut className="w-5 h-5" /></button>
+                      </div>
+                    ) : (
+                      <button onClick={() => handleNavClick('login')} className="flex items-center gap-2 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white px-4 py-2 rounded-full transition-colors font-bold text-sm ml-2 cursor-pointer">
+                        <User className="w-4 h-4" /> Entrar
+                      </button>
+                    )}
+                  </nav>
+
+                  <button className="lg:hidden text-zinc-300 hover:text-white flex items-center gap-4 cursor-pointer" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                    {cart.length > 0 && <span className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">{cart.length}</span>}
+                    {isMobileMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
+                  </button>
+                </div>
+
+                {isMobileMenuOpen && (
+                  <div className="lg:hidden absolute top-full left-0 w-full bg-zinc-900 border-b border-zinc-800 p-6 flex flex-col gap-6 shadow-2xl anim-fade-in-up">
+                    <button onClick={() => handleNavClick('home')} className="text-lg font-bold text-left text-zinc-300 hover:text-blue-500 cursor-pointer">Início</button>
+                    <button onClick={() => handleNavClick('kits')} className="text-lg font-bold text-left text-zinc-300 hover:text-blue-500 cursor-pointer">Produtos</button>
+                    <button onClick={() => handleNavClick('parts')} className="text-lg font-bold text-left text-zinc-300 hover:text-cyan-500 cursor-pointer">Peças</button>
+                    <button onClick={() => handleNavClick('about')} className="text-lg font-bold text-left text-zinc-300 hover:text-blue-500 cursor-pointer">Sobre</button>
+                    <button onClick={() => { setIsMobileMenuOpen(false); setIsCartOpen(true); }} className="text-lg font-bold text-left text-zinc-300 hover:text-blue-500 flex items-center gap-2 cursor-pointer">Carrinho ({cart.length})</button>
+                    {user ? (
+                       <div className="flex justify-between items-center"><span className="text-blue-400 font-medium flex items-center gap-2"><Bot className="w-5 h-5"/> {user.name}</span><button onClick={() => {setUser(null); setIsMobileMenuOpen(false);}} className="text-red-400 font-bold cursor-pointer">Sair</button></div>
+                    ) : (
+                      <button onClick={() => handleNavClick('login')} className="flex items-center gap-3 text-lg font-bold text-indigo-400 hover:text-indigo-300 cursor-pointer"><User className="w-6 h-6" /> Fazer Login</button>
+                    )}
+                  </div>
+                )}
+              </header>
+
+              <main className="flex-grow">
+                {currentView === 'home' && (
+                  <div>
+                    <section className="relative min-h-screen flex items-center pt-24 overflow-hidden border-b border-zinc-900">
+                      <div className="absolute top-1/4 right-0 w-[800px] h-[800px] bg-blue-900/10 rounded-full blur-[120px] pointer-events-none"></div>
+                      <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10 w-full anim-fade-in-up">
+                        <div className="max-w-3xl">
+                          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-6"><span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> Engenharia Integrada</div>
+                          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[1.1] tracking-tight mb-6">INTELIGÊNCIA <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-400">RESIDENCIAL</span><br />SIMPLIFICADA</h1>
+                          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mb-10 leading-relaxed font-light">Compre plantas de engenharia e os componentes exatos. Solução inteligente para você mesmo instalar ou entregar na mão de um eletricista local.</p>
+                          <div className="flex flex-col sm:flex-row gap-4">
+                            <button onClick={() => handleNavClick('kits')} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:shadow-lg hover:shadow-blue-600/30 flex items-center justify-center gap-2 cursor-pointer">
+                              VER PRODUTOS <ArrowRight className="w-5 h-5" />
+                            </button>
+                            <button onClick={() => handleNavClick('parts')} className="bg-transparent hover:bg-zinc-900 border border-zinc-800 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer">
+                              Montar Peças Avulsas
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+                    
+                    <section className="py-24 bg-zinc-950">
+                      <div className="max-w-7xl mx-auto px-6 md:px-12 text-center">
+                        <h2 className="text-3xl font-bold mb-12 anim-fade-in-up">Por que a ArTech é diferente?</h2>
+                        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto anim-fade-in-up-delay-1">
+                           <button onClick={() => handleNavClick('about')} className="bg-zinc-900 p-8 rounded-3xl hover:bg-zinc-800 border border-zinc-800 transition-colors text-left group cursor-pointer">
+                              <Map className="w-10 h-10 text-blue-500 mb-4 group-hover:scale-110 transition-transform" />
+                              <h4 className="font-bold text-xl mb-2 text-white">Planta Inclusa</h4>
+                              <p className="text-zinc-500 text-sm">Não vendemos só caixas. Entregamos o mapa elétrico visual.</p>
+                           </button>
+                           <button onClick={() => handleNavClick('parts')} className="bg-zinc-900 p-8 rounded-3xl hover:bg-zinc-800 border border-zinc-800 transition-colors text-left group cursor-pointer">
+                              <Wrench className="w-10 h-10 text-cyan-500 mb-4 group-hover:scale-110 transition-transform" />
+                              <h4 className="font-bold text-xl mb-2 text-white">Expansão Livre</h4>
+                              <p className="text-zinc-500 text-sm">Hardware aberto. Compre componentes quando quiser.</p>
+                           </button>
+                           <button onClick={() => setIsChatOpen(true)} className="bg-zinc-900 p-8 rounded-3xl hover:bg-zinc-800 border border-zinc-800 transition-colors text-left group cursor-pointer">
+                              <Bot className="w-10 h-10 text-blue-500 mb-4 group-hover:scale-110 transition-transform" />
+                              <h4 className="font-bold text-xl mb-2 text-white">Consultoria IA</h4>
+                              <p className="text-zinc-500 text-sm">Diga ao Arty o que você quer fazer, e ele monta a lista na hora.</p>
+                           </button>
+                        </div>
+                      </div>
+                    </section>
+                    
+                    <section className="py-24 bg-zinc-900/50 border-t border-zinc-800/50">
+                       <div className="max-w-7xl mx-auto px-6 md:px-12 text-center">
+                         <h2 className="text-3xl font-bold mb-12 text-white anim-fade-in-up">Nossos Produtos em Destaque</h2>
+                         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto anim-fade-in-up-delay-2">
+                           {[MOCK_KITS[0], MOCK_KITS[4]].map((kit) => (
+                              <div key={kit.id} className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-3 flex flex-col shadow-lg group hover:border-blue-500/50 transition-colors h-full text-left">
+                                <div onClick={() => openProductModal(kit, true)} className="cursor-pointer relative w-full h-64 rounded-[1.5rem] overflow-hidden bg-zinc-950 flex-shrink-0">
+                                  <img src={kit.image} alt={kit.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-transform duration-700 group-hover:scale-105" />
+                                </div>
+                                <div className="p-5 flex flex-col flex-grow">
+                                  <h4 onClick={() => openProductModal(kit, true)} className="text-white font-bold text-2xl mb-2 cursor-pointer hover:text-blue-400 transition-colors">{kit.name}</h4>
+                                  <div className="flex items-end justify-between border-t border-zinc-800 pt-5 mt-auto">
+                                    <span className="text-white font-black text-2xl">R$ {kit.price.toLocaleString('pt-BR')}</span>
+                                    <button onClick={(e) => { e.stopPropagation(); addToCart(kit); }} className="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl font-bold transition-colors cursor-pointer">
+                                      <ShoppingCart className="w-5 h-5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                         </div>
+                       </div>
+                    </section>
+                  </div>
+                )}
+                
+                {currentView === 'kits' && <KitsView onAddToCart={addToCart} onProductClick={openProductModal} />}
+                {currentView === 'parts' && <PartsView onAddToCart={addToCart} onProductClick={openProductModal} />}
+                {currentView === 'about' && <AboutView onNavigate={handleNavClick} />}
+                {currentView === 'content' && <ContentView title={contentPage.title} content={contentPage.content} />}
+                {currentView === 'login' && <LoginView onLoginSuccess={(u) => { setUser(u); showToast(`Bem-vindo, ${u.name}!`); handleNavClick('home'); }} onToast={showToast} />}
+              </main>
+
+              {currentView !== 'login' && (
+                <div className="fixed bottom-6 right-6 z-[120] flex flex-col items-end pointer-events-none">
+                  <div className={`absolute bottom-16 right-0 mb-4 w-[360px] bg-zinc-900 border border-cyan-500/50 rounded-2xl shadow-[0_0_40px_-10px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-300 origin-bottom-right pointer-events-auto ${isChatOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}>
+                    <div className="bg-zinc-950 p-4 border-b border-zinc-800 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-cyan-950 flex items-center justify-center border border-cyan-500/50"><Bot className="w-5 h-5 text-cyan-400" /></div>
+                        <div><h4 className="text-sm font-bold text-white">Arty IA</h4><span className="text-xs text-cyan-400 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-cyan-400 inline-block animate-pulse"></span> Online</span></div>
+                      </div>
+                      <button onClick={() => setIsChatOpen(false)} className="text-zinc-500 hover:text-white p-1 bg-zinc-800/50 rounded-md transition-colors cursor-pointer"><X className="w-5 h-5" /></button>
+                    </div>
+                    <div className="p-4 h-[380px] overflow-y-auto bg-zinc-900 flex flex-col gap-4 scroll-smooth">
+                      {chatMessages.map((msg) => (
+                        <div key={msg.id} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'} gap-2 w-full`}>
+                          <div className={`p-3 text-[13px] max-w-[90%] border shadow-sm leading-relaxed ${msg.sender === 'user' ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm border-blue-500' : 'bg-zinc-800 text-zinc-200 rounded-2xl rounded-tl-sm border-zinc-700/50'}`} dangerouslySetInnerHTML={{ __html: msg.text }} />
+                          {msg.options && (
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              {msg.options.map((opt, i) => <button key={i} onClick={() => handleSendMessage(opt)} className="text-xs font-medium bg-zinc-800 hover:bg-cyan-900/40 border border-zinc-700 hover:border-cyan-500/50 text-cyan-400 px-3 py-1.5 rounded-full transition-colors cursor-pointer">{opt}</button>)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-3 border-t border-zinc-800 bg-zinc-950 flex items-center gap-2">
+                      <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(inputText)} placeholder="Fale com a IA..." className="flex-1 bg-zinc-900 text-sm text-white placeholder-zinc-500 rounded-xl px-4 py-2 border border-zinc-800 focus:outline-none focus:border-cyan-500/50 transition-colors"/>
+                      <button onClick={() => handleSendMessage(inputText)} disabled={!inputText.trim()} className="w-10 h-10 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center transition-colors disabled:opacity-50 cursor-pointer"><Send className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsChatOpen(!isChatOpen)} className="relative group flex items-center justify-center w-14 h-14 pointer-events-auto cursor-pointer">
+                    <span className="absolute inset-0 rounded-full bg-cyan-400 animate-ping opacity-40 group-hover:opacity-60 transition-opacity"></span>
+                    <div className="relative w-full h-full rounded-full bg-zinc-900 border-2 border-cyan-500 flex items-center justify-center text-cyan-400 shadow-lg shadow-cyan-900/30 group-hover:scale-110 transition-transform duration-300">
+                      {isChatOpen ? <X className="w-6 h-6" /> : <Bot className="w-6 h-6" />}
+                    </div>
+                  </button>
+                </div>
+              )}
+              
+              <footer className="bg-black pt-16 pb-8 border-t border-zinc-900 mt-auto">
+                <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                  <div className="flex flex-col items-start gap-4">
+                    <div onClick={() => handleNavClick('home')} className="cursor-pointer"><ArTechLogo /></div>
+                    <p className="text-zinc-500 text-sm leading-relaxed mt-2">Democratizando a engenharia de ponta com esquemas visuais e hardware premium.</p>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <h4 className="text-white font-bold mb-2">Plataforma</h4>
+                    <button onClick={() => handleNavClick('kits')} className="text-zinc-400 hover:text-blue-400 text-left text-sm transition-colors cursor-pointer">Produtos</button>
+                    <button onClick={() => handleNavClick('parts')} className="text-zinc-400 hover:text-cyan-400 text-left text-sm transition-colors cursor-pointer">Peças</button>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <h4 className="text-white font-bold mb-2">Suporte</h4>
+                    <button onClick={() => handleContentClick('Ajuda', 'Vídeos de montagem e tutoriais da rede Zigbee.')} className="text-zinc-400 hover:text-white text-left text-sm transition-colors cursor-pointer">Central de Ajuda</button>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <h4 className="text-white font-bold mb-2">Conecte-se</h4>
+                    <div className="flex gap-4">
+                      <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-blue-600 transition-colors"><Instagram className="w-5 h-5"/></a>
+                    </div>
+                  </div>
+                </div>
+              </footer>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
